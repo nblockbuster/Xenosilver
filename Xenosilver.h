@@ -141,7 +141,7 @@ namespace Xenosilver {
 			this->listBox1->Name = L"listBox1";
 			this->listBox1->Size = System::Drawing::Size(146, 684);
 			this->listBox1->TabIndex = 8;
-			this->listBox1->Click += gcnew System::EventHandler(this, &MyForm::listBox1_Click);
+			this->listBox1->DoubleClick += gcnew System::EventHandler(this, &MyForm::listBox1_Click);
 			// 
 			// imageList1
 			// 
