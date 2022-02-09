@@ -363,3 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 /.vshistory
 /expath_temp
+/1.png
+*.bin
+*.dds
+*.png

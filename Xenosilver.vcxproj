@@ -110,7 +110,7 @@
     <Link>
       <AdditionalDependencies>D:\MontsUnpackerCPP\x64\Release\package.obj;D:\MontsUnpackerCPP\x64\Release\helpers.obj;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Windows</SubSystem>
-      <AdditionalOptions>/ENTRY:"main" %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/ENTRY:"main" /LTCG %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
