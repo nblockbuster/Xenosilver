@@ -265,7 +265,7 @@ namespace Xenosilver {
 			this->button4->Name = L"button4";
 			this->button4->Size = System::Drawing::Size(105, 60);
 			this->button4->TabIndex = 17;
-			this->button4->Text = L"Extract All";
+			this->button4->Text = L"Extract Package";
 			this->button4->UseVisualStyleBackColor = false;
 			this->button4->Click += gcnew System::EventHandler(this, &MyForm::button4_Click);
 			// 
@@ -277,7 +277,7 @@ namespace Xenosilver {
 			this->button5->Name = L"button5";
 			this->button5->Size = System::Drawing::Size(178, 38);
 			this->button5->TabIndex = 18;
-			this->button5->Text = L"Reset Output Path";
+			this->button5->Text = L"Set Output Path";
 			this->button5->UseVisualStyleBackColor = false;
 			this->button5->Click += gcnew System::EventHandler(this, &MyForm::button5_Click);
 			// 
@@ -327,44 +327,37 @@ namespace Xenosilver {
 			MessageBox::Show("Set Package ID first.");
 			Application::Restart();
 		}
-		//std::string pkgsPath = "H:/Steam SSD Games/steamapps/common/Destiny 2/packages";
-		//std::string pkgID = "0342";
-		//MessageBox::Show(MyForm::PackagesPath + ", " + MyForm::PackageID);
 		Package pkg(pkgID, pkgsPath);
 		pkg.readHeader();
 		pkg.getEntryTable();
-		
-		//MessageBox::Show(pkg.entries.size().ToString());
 		for (int i = 0; i < pkg.entries.size(); i++)
 		{
 			Entry entry = pkg.entries[i];
 			if ((entry.numType == 40 || entry.numType == 48) && entry.numSubType == 1) {
 				String^ DataHash = context.marshal_as<String^>(entry.reference);
 				listBox1->Items->Add(context.marshal_as<String^>(getFileFromHash(context.marshal_as<std::string>(DataHash)))->ToUpper());
-				//listView1->Items->Add(context.marshal_as<String^>(getFileFromHash(context.marshal_as<std::string>(DataHash)))->ToUpper());
 				items->Add(context.marshal_as<String^>(getFileFromHash(context.marshal_as<std::string>(DataHash)))->ToUpper());
 			}
 		}
+		//MessageBox::Show(items->Count.ToString());
 	}
 	private: System::Void listBox1_Click(System::Object^ sender, System::EventArgs^ e) {
 		msclr::interop::marshal_context context;
-		if (std::filesystem::exists("temp.png")) {
+		if (IO::File::Exists("temp.png")) {
 			delete pictureBox1->Image;
-			std::filesystem::remove("temp.png");
+			IO::File::Delete("temp.png");
 		}
 		String^ ClickedOn = listBox1->SelectedItem->ToString();
 		MyForm::Hash = ClickedOn;
 		label1->Text = "Selected Hash: " + context.marshal_as<String^>(getHashFromFile(context.marshal_as<std::string>(ClickedOn)));
 		std::string pkgsPath = context.marshal_as<std::string>(MyForm::PackagesPath);
 		std::string pkgID = context.marshal_as<std::string>(MyForm::PackageID);
-		//MessageBox::Show(context.marshal_as<String^>(getHashFromFile(context.marshal_as<std::string>(ClickedOn))) + " // " + context.marshal_as<String^>(getReferenceFromHash(getHashFromFile(context.marshal_as<std::string>(ClickedOn)), pkgsPath)));
 		std::string hash = getReferenceFromHash(getHashFromFile(context.marshal_as<std::string>(ClickedOn)), pkgsPath);
 		int fileSize = 0;
 		unsigned char* data = nullptr;
 		pkgID = getPkgID(hash);
 		Package pkg(pkgID, pkgsPath);
 		std::string datahash = getReferenceFromHash(hash, pkgsPath);
-		//MessageBox::Show(context.marshal_as<String^>(pkg.getEntryReference(hash)));
 		uint16_t width, height, dxgi_type;
 		data = pkg.getEntryData(datahash, fileSize);
 		if (data == nullptr || sizeof(data) == 0) {
@@ -393,10 +386,7 @@ namespace Xenosilver {
 		fclose(dFile);
 		delete[] data;
 		if (!IO::File::Exists("temp.png")) {
-			//String^ rtArgs = "expath_temp/temp.bin " + dxgi_type.ToString() + " 0 " + width.ToString() + " " + height.ToString();
 			String^ rtArgs = "/C RawtexCmd.exe temp.bin " + dxgi_type.ToString() + " 0 " + width.ToString() + " " + height.ToString();
-			//Diagnostics::Process::Start("cmd.exe", rtArgs);
-			//MessageBox::Show(rtArgs);
 			Diagnostics::Process^ proc1 = gcnew Diagnostics::Process();
 			proc1->StartInfo->Arguments = rtArgs;
 			proc1->StartInfo->FileName = "cmd.exe";
@@ -404,11 +394,9 @@ namespace Xenosilver {
 			proc1->StartInfo->CreateNoWindow = true;
 			proc1->Start();
 			proc1->WaitForExit();
-			//proc1->Dispose();
 			if (dxgi_type == 28)
 				dxgi_type += 1;
 			MyForm::DxgiType = dxgi_type;
-			//MessageBox::Show(proc1->ExitCode.ToString());
 			IO::File::Delete("temp.bin");
 			IO::File::Delete("temp.dds");
 			widthLabel->Text = "Width: " + width.ToString();
@@ -423,72 +411,40 @@ namespace Xenosilver {
 	}
 	private: System::Void button1_Click(System::Object^ sender, System::EventArgs^ e) {
 		msclr::interop::marshal_context context;
-		//if (Registry::CurrentUser->OpenSubKey("d2TextureViewer")->GetValue("OutputPath") == nullptr) {
-			std::string dxgiFormat;
-			dxgiFormat = DXGI_FORMAT[MyForm::DxgiType];
-			String^ dxgistring = context.marshal_as<String^>(dxgiFormat);
-			folderBrowserDialog2->ShowDialog();
-			String^ OutputPath = folderBrowserDialog2->SelectedPath;
-			RegistryKey^ OutputKey = Registry::CurrentUser->OpenSubKey("d2TextureViewer", true);
-			//RegistryKey^ PackagesSettings = PackagesKey->CreateSubKey("PackagesPath");
-			OutputKey->SetValue("OutputPath", folderBrowserDialog2->SelectedPath);
-			//MessageBox::Show(Registry::CurrentUser->OpenSubKey("d2TextureViewer")->GetValue("OutputPath")->ToString());
-			//String^ OutputPath = Registry::CurrentUser->OpenSubKey("d2TextureViewer")->GetValue("OutputPath")->ToString();
-			String^ OutputName = OutputPath + "\\" + MyForm::Hash + ".png";
-			//std::string outname = context.marshal_as<std::string>(OutputPath) + "\\" + context.marshal_as<std::string>(MyForm::Hash) + ".png";
-			//MessageBox::Show(OutputName);
-			String^ txArgs = "/C texconv.exe \"temp.png\" -nologo -o \"" + OutputPath + "\" -y -srgb -ft PNG -f " + dxgistring;
-			//MessageBox::Show(txArgs);
-			Diagnostics::Process^ proc1 = gcnew Diagnostics::Process();
-			proc1->StartInfo->Arguments = txArgs;
-			proc1->StartInfo->FileName = "cmd.exe";
-			proc1->StartInfo->WindowStyle = Diagnostics::ProcessWindowStyle::Hidden;
-			proc1->StartInfo->CreateNoWindow = true;
-			proc1->Start();
-			proc1->WaitForExit();
-			//proc1->Dispose();
-			//MessageBox::Show(proc1->ExitCode.ToString());
-			IO::File::Copy(OutputPath + "/temp.png", OutputName, true);
-			if (IO::File::Exists(OutputPath + "/temp.png"))
-				IO::File::Delete(OutputPath + "/temp.png");
-		//}
-		//else {
-			/*
-			std::string dxgiFormat;
-			dxgiFormat = DXGI_FORMAT[MyForm::DxgiType];
-			String^ dxgistring = context.marshal_as<String^>(dxgiFormat);
-			String^ OutputPath = Registry::CurrentUser->OpenSubKey("d2TextureViewer")->GetValue("OutputPath")->ToString();
-			String^ OutputName = OutputPath + "\\" + MyForm::Hash + ".png";
-			//std::string outname = context.marshal_as<std::string>(OutputPath) + "\\" + context.marshal_as<std::string>(MyForm::Hash) + ".png";
-			//MessageBox::Show(OutputName);
-			String^ txArgs = "/C texconv.exe \"temp.png\" -nologo -o \"" + OutputPath + "\" -y -srgb -ft PNG -f " + dxgistring;
-			//MessageBox::Show(txArgs);
-			Diagnostics::Process^ proc1 = gcnew Diagnostics::Process();
-			proc1->StartInfo->Arguments = txArgs;
-			proc1->StartInfo->FileName = "cmd.exe";
-			proc1->StartInfo->WindowStyle = Diagnostics::ProcessWindowStyle::Hidden;
-			proc1->StartInfo->CreateNoWindow = true;
-			proc1->Start();
-			proc1->WaitForExit();
-			//MessageBox::Show(proc1->ExitCode.ToString());
-			IO::File::Copy(OutputPath + "/temp.png", OutputName, true);
-			if (IO::File::Exists(OutputPath + "/temp.png"))
-				IO::File::Delete(OutputPath + "/temp.png");
-				*/
-		//}
+		std::string dxgiFormat;
+		dxgiFormat = DXGI_FORMAT[MyForm::DxgiType];
+		String^ dxgistring = context.marshal_as<String^>(dxgiFormat);
+		folderBrowserDialog2->ShowDialog();
+		String^ OutputPath = folderBrowserDialog2->SelectedPath;
+		RegistryKey^ OutputKey = Registry::CurrentUser->OpenSubKey("d2TextureViewer", true);
+		OutputKey->SetValue("OutputPath", folderBrowserDialog2->SelectedPath);
+		String^ OutputName = OutputPath + "\\" + MyForm::Hash + ".png";
+		String^ txArgs = "/C texconv.exe \"temp.png\" -nologo -o \"" + OutputPath + "\" -y -srgb -ft PNG -f " + dxgistring;
+		Diagnostics::Process^ proc1 = gcnew Diagnostics::Process();
+		proc1->StartInfo->Arguments = txArgs;
+		proc1->StartInfo->FileName = "cmd.exe";
+		proc1->StartInfo->WindowStyle = Diagnostics::ProcessWindowStyle::Hidden;
+		proc1->StartInfo->CreateNoWindow = true;
+		proc1->Start();
+		proc1->WaitForExit();
+		IO::File::Copy(OutputPath + "/temp.png", OutputName, true);
+		if (IO::File::Exists(OutputPath + "/temp.png"))
+			IO::File::Delete(OutputPath + "/temp.png");
 	}
 	public: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
-		//if (Registry::CurrentUser->OpenSubKey("d2TextureViewer") == nullptr) {
-			//Registry::CurrentUser->CreateSubKey("d2TextureViewer");
 			folderBrowserDialog1->ShowDialog();
 			MyForm::PackagesPath = folderBrowserDialog1->SelectedPath;
+			if (Registry::CurrentUser->OpenSubKey("d2TextureViewer") == nullptr)
+				Registry::CurrentUser->CreateSubKey("d2TextureViewer");
 			Registry::CurrentUser->OpenSubKey("d2TextureViewer", true)->SetValue("PackagesPath", folderBrowserDialog1->SelectedPath);
 	}
 	private: System::Void textBox1_Click(System::Object^ sender, System::EventArgs^ e) {
-		textBox1->Text = "";
+		if (textBox1->Text == "Package ID")
+			textBox1->Text = "";
 	}
 	private: System::Void searchBox_Click(System::Object^ sender, System::EventArgs^ e) {
-		searchBox->Text = "";
+		if (searchBox->Text == "Search for file")
+			searchBox->Text = "";
 	}
 	private: System::Void searchBox_TextChanged(System::Object^ sender, System::EventArgs^ e) {
 		listBox1->Items->Clear();
@@ -505,18 +461,91 @@ namespace Xenosilver {
 		}
 	}
 	private: System::Void button4_Click(System::Object^ sender, System::EventArgs^ e) {
+		msclr::interop::marshal_context context;
+		std::string pkgsPath = context.marshal_as<std::string>(MyForm::PackagesPath);
+		std::string pkgID = context.marshal_as<std::string>(MyForm::PackageID);
+		MessageBox::Show("Extracting package " + MyForm::PackageID);
 		for each (String ^ str in items) {
-
+			if (str != "") {
+				std::string hash = getReferenceFromHash(getHashFromFile(context.marshal_as<std::string>(str)), pkgsPath);
+				int fileSize = 0;
+				unsigned char* data = nullptr;
+				pkgID = getPkgID(hash);
+				Package pkg(pkgID, pkgsPath);
+				std::string datahash = getReferenceFromHash(hash, pkgsPath);
+				uint16_t width, height, dxgi_type;
+				data = pkg.getEntryData(datahash, fileSize);
+				if (data == nullptr || sizeof(data) == 0) {
+					MessageBox::Show("Data sized 0. Exiting");
+					exit(120);
+				}
+				uint32_t datsize;
+				memcpy((char*)&datsize, data, 4);
+				memcpy((char*)&dxgi_type, data + 4, 2);
+				memcpy((char*)&width, data + 0x22, 2);
+				memcpy((char*)&height, data + 0x24, 2);
+				delete[] data;
+				fileSize = 0;
+				pkg.readHeader();
+				pkg.getEntryTable();
+				Entry dataEntry = pkg.entries[(hexStrToUint32(hash) % 8192)];
+				data = new unsigned char[dataEntry.fileSize];
+				data = pkg.getBufferFromEntry(dataEntry);
+				if (data == nullptr || sizeof(data) == 0) {
+					MessageBox::Show("Data sized 0. Exiting");
+					exit(120);
+				}
+				FILE* dFile;
+				fopen_s(&dFile, "temp.bin", "wb");
+				fwrite(data, dataEntry.fileSize, 1, dFile);
+				fclose(dFile);
+				delete[] data;
+				String^ rtArgs = "/C RawtexCmd.exe temp.bin " + dxgi_type.ToString() + " 0 " + width.ToString() + " " + height.ToString();
+				Diagnostics::Process^ proc1 = gcnew Diagnostics::Process();
+				proc1->StartInfo->Arguments = rtArgs;
+				proc1->StartInfo->FileName = "cmd.exe";
+				proc1->StartInfo->WindowStyle = Diagnostics::ProcessWindowStyle::Hidden;
+				proc1->StartInfo->CreateNoWindow = true;
+				proc1->Start();
+				proc1->WaitForExit();
+				if (dxgi_type == 28)
+					dxgi_type += 1;
+				//MyForm::DxgiType = dxgi_type;
+				if (IO::File::Exists("temp.bin"))
+					IO::File::Delete("temp.bin");
+				if (IO::File::Exists("temp.dds"))
+					IO::File::Delete("temp.dds");
+				std::string dxgiFormat;
+				dxgiFormat = DXGI_FORMAT[dxgi_type];
+				String^ dxgistring = context.marshal_as<String^>(dxgiFormat);
+				if (Registry::CurrentUser->OpenSubKey("d2TextureViewer")->GetValue("OutputPath") == nullptr) {
+					folderBrowserDialog2->ShowDialog();
+					String^ OutputPath = folderBrowserDialog2->SelectedPath;
+					RegistryKey^ OutputKey = Registry::CurrentUser->OpenSubKey("d2TextureViewer", true);
+					OutputKey->SetValue("OutputPath", folderBrowserDialog2->SelectedPath);
+				}
+				String^ OutputPath = Registry::CurrentUser->OpenSubKey("d2TextureViewer")->GetValue("OutputPath")->ToString();
+				String^ OutputName = OutputPath + "\\" + str + ".png";
+				String^ txArgs = "/C texconv.exe \"temp.png\" -nologo -o \"" + OutputPath + "\" -y -srgb -ft PNG -f " + dxgistring;
+				Diagnostics::Process^ proc2 = gcnew Diagnostics::Process();
+				proc2->StartInfo->Arguments = txArgs;
+				proc2->StartInfo->FileName = "cmd.exe";
+				proc2->StartInfo->WindowStyle = Diagnostics::ProcessWindowStyle::Hidden;
+				proc2->StartInfo->CreateNoWindow = true;
+				proc2->Start();
+				proc2->WaitForExit();
+				IO::File::Copy(OutputPath + "\\temp.png", OutputName, true);
+				if (IO::File::Exists(OutputPath + "\\temp.png"))
+					IO::File::Delete(OutputPath + "\\temp.png");
+			}
 		}
+		MessageBox::Show("Finished extracting " + items->Count.ToString() + " images.");
 	}
 	private: System::Void button5_Click(System::Object^ sender, System::EventArgs^ e) {
-		if (Registry::CurrentUser->OpenSubKey("d2TextureViewer")->GetValue("OutputPath") != nullptr) {
-			Registry::CurrentUser->OpenSubKey("d2TextureViewer")->DeleteValue("OutputPath");
-			MessageBox::Show("Reset Output path.");
-		}
-		else {
-			MessageBox::Show("Registry Value \"HKEY_CURRENT_USER\\d2TextureViewer\\OutputPath\" does not exist.");
-		}
+		folderBrowserDialog2->ShowDialog();
+		if (Registry::CurrentUser->OpenSubKey("d2TextureViewer") == nullptr)
+			Registry::CurrentUser->CreateSubKey("d2TextureViewer");
+		Registry::CurrentUser->OpenSubKey("d2TextureViewer", true)->SetValue("OutputPath", folderBrowserDialog2->SelectedPath);
 	}
 };
 }
