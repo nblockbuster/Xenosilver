@@ -434,6 +434,7 @@ namespace Xenosilver {
 	public: System::Void button2_Click(System::Object^ sender, System::EventArgs^ e) {
 			folderBrowserDialog1->ShowDialog();
 			MyForm::PackagesPath = folderBrowserDialog1->SelectedPath;
+			//looking back on this i dont like how i went about this. in the future ill make a .config file or some shit
 			if (Registry::CurrentUser->OpenSubKey("d2TextureViewer") == nullptr)
 				Registry::CurrentUser->CreateSubKey("d2TextureViewer");
 			Registry::CurrentUser->OpenSubKey("d2TextureViewer", true)->SetValue("PackagesPath", folderBrowserDialog1->SelectedPath);
@@ -543,6 +544,7 @@ namespace Xenosilver {
 	}
 	private: System::Void button5_Click(System::Object^ sender, System::EventArgs^ e) {
 		folderBrowserDialog2->ShowDialog();
+		//looking back on this i dont like how i went about this. in the future ill make a .config file or some shit
 		if (Registry::CurrentUser->OpenSubKey("d2TextureViewer") == nullptr)
 			Registry::CurrentUser->CreateSubKey("d2TextureViewer");
 		Registry::CurrentUser->OpenSubKey("d2TextureViewer", true)->SetValue("OutputPath", folderBrowserDialog2->SelectedPath);
